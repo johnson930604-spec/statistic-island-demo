@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>統計學習島 STAT ISLAND — 全開放＋點燈制 3D 統計互動探索群島</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- 左側 3D 群島舞台與 HUD 介面 -->
+    <main id="stage" aria-label="統計學習島 3D 場景">
+      <canvas id="scene-canvas" tabindex="0"></canvas>
+      <div id="labels-layer"></div>
+
+      <!-- 左上品牌標誌 -->
+      <header class="brand">
+        <div class="brand-logo">STAT<br>ISLAND</div>
+        <div class="brand-divider"></div>
+        <div class="brand-titles">
+          <div class="brand-sub">統計學習島 · 教學實踐研究計畫</div>
+          <div class="brand-main">全開放＋點燈制 12 島探索沙盒</div>
+        </div>
+      </header>
+
+      <!-- 頂部中央時段與環境開關 -->
+      <div class="hud-top-center">
+        <div class="time-pill" role="group" aria-label="時段切換">
+          <button type="button" class="time-btn" data-time="dawn" aria-pressed="false">🌅 清晨</button>
+          <button type="button" class="time-btn" data-time="day" aria-pressed="true">☀️ 白天</button>
+          <button type="button" class="time-btn" data-time="dusk" aria-pressed="false">🌇 黃昏</button>
+          <button type="button" class="time-btn" data-time="night" aria-pressed="false">🌙 夜晚</button>
+        </div>
+        <div class="toggles-pill" role="group" aria-label="場景顯示開關">
+          <button type="button" class="tg" data-toggle="tags" aria-pressed="true">🏷️ 名牌</button>
+          <button type="button" class="tg" data-toggle="cargo" aria-pressed="true">📦 搬運</button>
+          <button type="button" class="tg" data-toggle="flows" aria-pressed="true">🔗 知識線</button>
+          <button type="button" class="tg" data-toggle="pause" aria-pressed="false">⏸️ 暫停</button>
+          <button type="button" class="tg" data-toggle="bird" aria-pressed="false">🦅 鳥瞰</button>
+          <button type="button" class="tg" data-toggle="log" aria-pressed="false">📜 學習日誌</button>
+        </div>
+      </div>
+
+      <!-- 右上角工具列 -->
+      <div class="toolbar">
+        <button type="button" id="char-btn">☺ 研究員角色</button>
+        <button type="button" id="toggle-sidebar-btn">收合索引</button>
+        <button type="button" id="help-btn" title="操作說明與導覽">? 導覽</button>
+      </div>
+
+      <!-- 左側詳情卡片 (點擊島嶼、建築或知識流時展開) -->
+      <aside id="card" class="card" hidden aria-live="polite">
+        <button type="button" id="card-close" class="card-close-btn" aria-label="關閉詳情卡片">×</button>
+        <div id="card-content"></div>
+      </aside>
+
+      <!-- 底部狀態列與三視角篩選面板 -->
+      <div class="bottom-hud">
+        <div class="status-bar">
+          <span class="st"><i style="--c:#f5b82e"></i>點燈進度 <b id="st-lit-count">0 / 12</b> 座島</span>
+          <span class="st"><i style="--c:#db6a41"></i><b>48</b> 棟公式與前提建築</span>
+          <span class="st"><i style="--c:#3e7c8c"></i><b>18</b> 條跨島推論知識流</span>
+          <span class="st"><i style="--c:#5e9a6f"></i>點擊 <b>✦ 高斯導師</b> 可直接開啟模擬器</span>
+        </div>
+
+        <div class="panel-bar">
+          <div class="panel-tabs">
+            <button type="button" class="active" data-panel="progress">01 點燈進度篩選</button>
+            <button type="button" data-panel="stages">02 五大學習階段</button>
+            <button type="button" data-panel="dims">03 STATS 五大維度</button>
+          </div>
+
+          <!-- 01 點燈進度 -->
+          <div id="panel-progress" class="sub-panel active">
+            <button type="button" data-ftype="lit" data-fval="all">全部開放島嶼 (12)</button>
+            <button type="button" data-ftype="lit" data-fval="lit">🌟 已點亮燈塔</button>
+            <button type="button" data-ftype="lit" data-fval="unlit">⚪ 待挑戰點燈</button>
+          </div>
+
+          <!-- 02 五大學習階段 -->
+          <div id="panel-stages" class="sub-panel">
+            <button type="button" data-ftype="stage" data-fval="1">階段1：描述與視覺化</button>
+            <button type="button" data-ftype="stage" data-fval="2">階段2：機率與抽樣分配</button>
+            <button type="button" data-ftype="stage" data-fval="3">階段3：區間與單樣本檢定</button>
+            <button type="button" data-ftype="stage" data-fval="4">階段4：多組比較與卡方</button>
+            <button type="button" data-ftype="stage" data-fval="5">階段5：相關與線性迴歸</button>
+          </div>
+
+          <!-- 03 STATS 五大維度 -->
+          <div id="panel-dims" class="sub-panel">
+            <button type="button" data-ftype="dim" data-fval="S">S 摘要描述</button>
+            <button type="button" data-ftype="dim" data-fval="P">P 機率抽樣</button>
+            <button type="button" data-ftype="dim" data-fval="T">T 推論檢定</button>
+            <button type="button" data-ftype="dim" data-fval="A">A 變異分析</button>
+            <button type="button" data-ftype="dim" data-fval="M">M 關聯模型</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 右側常駐統計主題與知識流索引欄 -->
+    <aside id="sidebar" aria-label="統計學習島主題索引">
+      <div class="sidebar-header">
+        <div class="eyebrow">STAT ISLAND · 12 CORE ISLANDS</div>
+        <h1>統計學習島</h1>
+        <p>全開放自由探索 12 座核心統計島、48 棟指標建築，透過互動模擬器與觀念診斷點亮全島燈塔。</p>
+      </div>
+
+      <!-- 統計方法決策樹診斷器入口卡片 (對應原版 .heart-quiz-entry) -->
+      <button type="button" id="open-dtree-btn" class="dtree-entry">
+        <span class="dtree-entry-title">🧭 該用哪種統計方法？決策樹診斷器</span>
+        <span class="dtree-entry-lead">依研究目的與測量尺度自動推薦統計島 ＋ 5 大研究情境闖關</span>
+        <i>↗</i>
+      </button>
+
+      <input
+        type="search"
+        id="search"
+        class="search-input"
+        placeholder="搜尋統計主題、公式、Z分數、ANOVA、卡方..."
+        aria-label="搜尋統計概念"
+      />
+
+      <div class="sidebar-tabs">
+        <button type="button" class="active" data-tab="islands">統計主題島 12</button>
+        <button type="button" data-tab="flows">推論知識流 18</button>
+      </div>
+
+      <div id="tree"></div>
+    </aside>
+  </div>
+
+  <!-- 1. 三步驟新手導覽 Modal (#intro-modal) -->
+  <div id="intro-modal" class="modal-overlay" hidden>
+    <div class="modal-box" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+      <div class="modal-head">
+        <div>
+          <div id="intro-eyebrow" class="eyebrow">WELCOME TO STAT ISLAND</div>
+          <h2 id="intro-title">歡迎來到統計學習島</h2>
+        </div>
+        <button type="button" id="intro-skip-btn" class="card-close-btn" title="略過導覽">×</button>
+      </div>
+      <div id="intro-body" style="font-size:14.5px;line-height:1.7;color:var(--ink-soft);"></div>
+      <div class="modal-actions">
+        <button type="button" id="intro-prev-btn" class="btn-secondary">← 上一步</button>
+        <button type="button" id="intro-next-btn" class="btn-primary coral">下一步 →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. 互動式統計模擬器 Modal (#sim-modal) -->
+  <div id="sim-modal" class="modal-overlay" hidden>
+    <div class="modal-box wide" role="dialog" aria-modal="true" aria-labelledby="sim-title">
+      <div class="modal-head">
+        <div>
+          <div id="sim-eyebrow" class="eyebrow">INTERACTIVE SIMULATOR</div>
+          <h2 id="sim-title">互動式統計模擬器</h2>
+        </div>
+        <button type="button" id="sim-close-btn" class="card-close-btn" aria-label="關閉模擬器">×</button>
+      </div>
+
+      <div id="sim-mission" style="font-size:13.5px;font-weight:800;color:var(--coral-dark);margin-bottom:10px;"></div>
+
+      <div class="sim-stage-wrap">
+        <canvas id="sim-canvas" width="660" height="230"></canvas>
+        <div id="sim-metrics-line" style="font-size:12.5px;font-weight:800;color:var(--ink);margin-top:8px;text-align:center;"></div>
+        <div id="sim-sliders" class="sim-sliders"></div>
+      </div>
+
+      <div id="sim-status-banner" class="sim-status-banner"></div>
+
+      <!-- 觀念迷思診斷單選題 -->
+      <div id="sim-quiz-box" class="quiz-question-box"></div>
+
+      <div class="modal-actions">
+        <button type="button" id="sim-reset-btn" class="btn-secondary">↺ 重置參數與題目</button>
+        <button type="button" id="sim-complete-btn" class="btn-primary">完成「滑桿任務＋觀念題」點亮燈塔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. 統計方法決策樹診斷器 Modal (#dtree-modal) -->
+  <div id="dtree-modal" class="modal-overlay" hidden>
+    <div class="modal-box wide" role="dialog" aria-modal="true" aria-labelledby="dtree-title">
+      <div class="modal-head">
+        <div>
+          <div class="eyebrow">STATISTICAL METHOD DIAGNOSTIC · 決策樹與案例診斷</div>
+          <h2 id="dtree-title">🧭 統計方法決策樹診斷器</h2>
+        </div>
+        <button type="button" id="dtree-close-btn" class="card-close-btn" aria-label="關閉診斷器">×</button>
+      </div>
+
+      <div class="sidebar-tabs" style="margin-bottom:14px;">
+        <button type="button" id="dtree-tab-tree" class="active">🧭 互動決策樹分類導航</button>
+        <button type="button" id="dtree-tab-cases">🎯 5 大研究情境實戰闖關</button>
+      </div>
+
+      <div id="dtree-body"></div>
+    </div>
+  </div>
+
+  <!-- 4. 學習與點燈日誌側邊抽屜 (#log-drawer) -->
+  <aside id="log-drawer" class="side-drawer" hidden aria-label="統計學習與點燈日誌">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">LEARNING &amp; FLOW LOG</div>
+        <h2>📜 島嶼點燈與知識流日誌</h2>
+      </div>
+      <button type="button" id="log-close-btn" class="card-close-btn">×</button>
+    </div>
+
+    <div class="stat-grid-4">
+      <div class="stat-card" style="--accent:#d99b1e">
+        <b id="log-stat-lit">0 / 12</b>
+        <span>已點亮統計島燈塔</span>
+      </div>
+      <div class="stat-card" style="--accent:#5e9a6f">
+        <b id="log-stat-sim">0</b>
+        <span>完成模擬器實驗次數</span>
+      </div>
+      <div class="stat-card" style="--accent:#3e7c8c">
+        <b id="log-stat-depart">12</b>
+        <span>跨島統計量啟程次數</span>
+      </div>
+      <div class="stat-card" style="--accent:#db6a41">
+        <b id="log-stat-arrive">9</b>
+        <span>推論知識包送達次數</span>
+      </div>
+    </div>
+
+    <h3 style="font-size:12px;color:var(--muted);margin:14px 0 6px;">即時統計推論與點燈紀錄</h3>
+    <ul id="log-feed-list" class="log-list"></ul>
+  </aside>
+
+  <!-- 5. 研究員角色自訂側邊抽屜 (#char-drawer) -->
+  <aside id="char-drawer" class="side-drawer" hidden aria-label="研究員角色設定">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">RESEARCHER AVATAR</div>
+        <h2>☺ 打造你的統計研究員</h2>
+      </div>
+      <button type="button" id="char-close-btn" class="card-close-btn">×</button>
+    </div>
+    <div id="char-drawer-body"></div>
+  </aside>
+
+  <script src="stat-data.js"></script>
+  <script src="simulators.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
